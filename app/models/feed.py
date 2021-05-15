@@ -1,4 +1,3 @@
-import pydantic
 from bson import ObjectId
 from pydantic import Field, BaseModel, HttpUrl, AnyUrl
 

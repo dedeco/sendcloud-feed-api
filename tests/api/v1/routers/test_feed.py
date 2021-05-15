@@ -33,7 +33,7 @@ class TestFeed(TestCase):
         )
         created_feed = response.json()
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(created_feed,  {
+        self.assertEqual(created_feed, {
             "url": "http://www.nu.nl/rss/Algemeen",
             "title": "NU - Algemeen",
             "link": "https://www.nu.nl/algemeen",
@@ -41,3 +41,10 @@ class TestFeed(TestCase):
             "updates_enabled": True,
             "_id": everything_equals
         })
+
+    def test_list_feeds(self):
+        response = client.get(
+            f"{settings.API_V1_STR}/feeds/",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(len(response.json()) > 0)
