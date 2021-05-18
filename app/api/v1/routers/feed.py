@@ -1,12 +1,13 @@
 from http import HTTPStatus
 from typing import List
 
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from app.core.db import db
 from app.models.feed import FeedModel
+from app.models.feed_update import UpdateFeedModel
 from app.workers.worker import celery_app
 
 MAX_LIST_FEEDS = 1000
@@ -41,4 +42,22 @@ async def list_feeds():
     return feeds
 
 
+@feed_router.put("/{id}", response_description="Update a feed", response_model=FeedModel)
+async def update_feed(id: str, feed: UpdateFeedModel = Body(...)):
+    feed = {k: v for k, v in feed.dict().items() if v is not None}
 
+    if len(feed) >= 1:
+        update_result = await db["feeds"].update_one({"_id": id}, {"$set": feed})
+        if update_result.modified_count == 1:
+            if (
+                updated_feed := await db["feeds"].find_one({"_id": id})
+            ) is not None:
+                return updated_feed
+
+    if (existing_feed := await db["feeds"].find_one({"_id": id})) is not None:
+        return existing_feed
+
+    raise HTTPException(
+        status_code=HTTPStatus.NOT_FOUND,
+        detail=f"Feed {id} not found"
+    )

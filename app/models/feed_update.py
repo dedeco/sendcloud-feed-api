@@ -12,7 +12,7 @@ class UpdateFeedModel(BaseModel):
     updates_enabled: Optional[bool]
 
     class Config:
-        arbitrary_types_allowed = True
+        allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
         schema_extra = {
@@ -21,6 +21,6 @@ class UpdateFeedModel(BaseModel):
                 "title": "NU - Algemeen",
                 "link": "https://www.nu.nl/algemeen",
                 "description": "Lorem ipsum",
-                "updates_enabled": True,
+                "updates_enabled": False,
             }
         }
