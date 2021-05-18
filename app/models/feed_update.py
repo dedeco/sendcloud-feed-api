@@ -4,14 +4,15 @@ from bson import ObjectId
 from pydantic import BaseModel, AnyUrl, HttpUrl
 
 
-class UpdateFeedModelModel(BaseModel):
+class UpdateFeedModel(BaseModel):
     url: AnyUrl
     title: Optional[str]
     link: Optional[HttpUrl]
-    author: Optional[str]
+    description: Optional[str]
     updates_enabled: Optional[bool]
 
     class Config:
+        arbitrary_types_allowed = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
         schema_extra = {
@@ -19,7 +20,7 @@ class UpdateFeedModelModel(BaseModel):
                 "url": "http://www.nu.nl/rss/Algemeen",
                 "title": "NU - Algemeen",
                 "link": "https://www.nu.nl/algemeen",
-                "author": "Freddie Mercury",
+                "description": "Lorem ipsum",
                 "updates_enabled": True,
             }
         }
