@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -20,8 +20,14 @@ entry_router = APIRouter(
 
 
 @entry_router.get("/", response_description="List all feeds from a feed", response_model=List[EntryModel])
-async def list_entries(url: str):
-    entries = await db["entries"].find({'url': url}).to_list(MAX_LIST_FEEDS)
+async def list_entries(url: str, read: Optional[bool] = None):
+    if read is not None:
+        entries = await db["entries"].find(
+            {'url': url,
+             'read': read}
+        ).to_list(MAX_LIST_FEEDS)
+    else:
+        entries = await db["entries"].find({'url': url}).to_list(MAX_LIST_FEEDS)
     return entries
 
 
