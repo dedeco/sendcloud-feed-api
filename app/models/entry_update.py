@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from bson import ObjectId
@@ -11,6 +12,8 @@ class UpdateEntryModel(BaseModel):
     author: Optional[str]
     summary: Optional[str]
     read: Optional[bool]
+    last_updated: datetime
+    last_read: Optional[datetime]
 
     class Config:
         allow_population_by_field_name = True
@@ -27,7 +30,6 @@ class UpdateEntryModel(BaseModel):
                            "De landing van Zhurong, zoals de verkenner heet, is een triomf voor Peking, dat steeds "
                            "meer ambities heeft op het gebied van ruimtevaart.",
                 "read": False,
+                "updated": "2021-05-18T21:52:43.388525"
             }
         }
-
-

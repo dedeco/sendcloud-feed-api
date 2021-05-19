@@ -1,12 +1,11 @@
 from http import HTTPStatus
 from typing import List, Optional
 
+import pymongo
 from fastapi import APIRouter, HTTPException
-from fastapi.encoders import jsonable_encoder
 from starlette.responses import JSONResponse
 
 from app.models.base import PyObjectId
-from app.models.entry_update import UpdateEntryModel
 
 MAX_LIST_FEEDS = 1000
 
@@ -26,7 +25,7 @@ async def list_entries(url: Optional[str] = None, read: Optional[bool] = None):
         query.update({'url': url})
     if read is not None:
         query.update({'read': read})
-    entries = await db["entries"].find(query).to_list(MAX_LIST_FEEDS)
+    entries = await db["entries"].find(query).sort('last_updated', pymongo.DESCENDING).to_list(MAX_LIST_FEEDS)
     return entries
 
 

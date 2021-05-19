@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from bson import ObjectId
@@ -14,6 +15,7 @@ class EntryModel(BaseModel):
     author: Optional[str] = Field(...)
     summary: Optional[str] = Field(...)
     read: Optional[bool] = Field(...)
+    last_updated: datetime = Field(...)
 
     class Config:
         allow_population_by_field_name = True

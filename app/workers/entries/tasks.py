@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -46,7 +46,8 @@ def update_feed_item():
                 'link': link,
                 'author': author,
                 'summary': summary,
-                'read': False
+                'read': False,
+                'last_updated': datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f'),
             }
             has_entry = db["entries"].find_one({"link": link})
             if not has_entry:
