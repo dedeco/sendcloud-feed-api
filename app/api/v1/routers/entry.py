@@ -20,14 +20,13 @@ entry_router = APIRouter(
 
 
 @entry_router.get("/", response_description="List all feeds from a feed", response_model=List[EntryModel])
-async def list_entries(url: str, read: Optional[bool] = None):
+async def list_entries(url: Optional[str] = None, read: Optional[bool] = None):
+    query = {}
+    if url:
+        query.update({'url': url})
     if read is not None:
-        entries = await db["entries"].find(
-            {'url': url,
-             'read': read}
-        ).to_list(MAX_LIST_FEEDS)
-    else:
-        entries = await db["entries"].find({'url': url}).to_list(MAX_LIST_FEEDS)
+        query.update({'read': read})
+    entries = await db["entries"].find(query).to_list(MAX_LIST_FEEDS)
     return entries
 
 
