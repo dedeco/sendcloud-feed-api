@@ -13,6 +13,7 @@ class FeedModel(BaseModel):
     link:  Optional[HttpUrl]
     description: Optional[str]
     updates_enabled: Optional[bool]
+    retries: Optional[int]
 
     class Config:
         allow_population_by_field_name = True

@@ -7,27 +7,43 @@ from pymongo import MongoClient
 from app.core.config import settings
 from app.workers.worker import celery_app
 
+ATTEMPTS = 3
+
 client = MongoClient(settings.MONGO_URI)
 db = client.feed
 
 
-@celery_app.task
+@celery_app.task()
+def update_feeds():
+    feeds = db["feeds"].find({"retries": {'$lt': ATTEMPTS}})
+    for feed in feeds:
+        celery_app.send_task('update_feed', args=[feed.get("_id")])
+    return True
+
+
+@celery_app.task(name='update_feed')
 def update_feed(feed_id: str):
     feed = db["feeds"].find_one({"_id": feed_id})
+    retries = 0
     r = requests.get(feed.get('url'))
     soup = BeautifulSoup(r.content, features='xml')
-    channel = soup.find('channel')
-    crawled = {
-        'title': channel.find('title').text if channel.find('title') else None,
-        'link': channel.find('link').text if channel.find('link') else None,
-        'description': channel.find('description').text if channel.find('description') else None,
-    }
-    feed = feed | crawled
+    try:
+        channel = soup.find('channel')
+        fetched = {
+            'title': channel.find('title').text if channel.find('title') else None,
+            'link': channel.find('link').text if channel.find('link') else None,
+            'description': channel.find('description').text if channel.find('description') else None,
+            'retries': 0
+        }
+        feed = feed | fetched
+    except AttributeError:
+        retries += feed.get('retries', 0) + 1
+        feed = feed | {'retries': retries}
     db["feeds"].update_one({"_id": feed_id}, {"$set": feed})
     return True
 
 
-@celery_app.task
+@celery_app.task()
 def update_feed_item(url: str = None):
     query = {'updates_enabled': True}
     if url:
@@ -60,4 +76,5 @@ def update_feed_item(url: str = None):
 
 @celery_app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(60, update_feed_item.s(), name='update every 60')
+    sender.add_periodic_task(5*60, update_feeds.s(), name='retry every 5 minutes')
+    sender.add_periodic_task(60, update_feed_item.s(), name='update every 60 seconds')
