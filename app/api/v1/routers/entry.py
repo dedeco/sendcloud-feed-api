@@ -1,6 +1,12 @@
+from http import HTTPStatus
 from typing import List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from fastapi.encoders import jsonable_encoder
+from starlette.responses import JSONResponse
+
+from app.models.base import PyObjectId
+from app.models.entry_update import UpdateEntryModel
 
 MAX_LIST_FEEDS = 1000
 
@@ -14,6 +20,25 @@ entry_router = APIRouter(
 
 
 @entry_router.get("/", response_description="List all feeds from a feed", response_model=List[EntryModel])
-async def list_entries():
-    entries = await  db["entries"].find({'url': 'https://feeds.feedburner.com/tweakers/mixed'}).to_list(MAX_LIST_FEEDS)
+async def list_entries(url: str):
+    entries = await db["entries"].find({'url': url}).to_list(MAX_LIST_FEEDS)
     return entries
+
+
+@entry_router.put("/{id}", response_description="Mark as read")
+async def mark_as_read(id: str):
+    if entry := await db["entries"].find_one({"_id": PyObjectId(id)}):
+        update_result = await db["entries"].update_one({"_id": PyObjectId(id)}, {'$set': {'read': True}})
+        if update_result.modified_count == 1:
+            return JSONResponse(
+                status_code=HTTPStatus.NO_CONTENT,
+            )
+        else:
+            return JSONResponse(
+                status_code=HTTPStatus.ALREADY_REPORTED,
+                content={"message": f"Entry {id} was marked as read before"}
+            )
+    raise HTTPException(
+        status_code=HTTPStatus.NOT_FOUND,
+        detail=f"Entry {id} not found"
+    )

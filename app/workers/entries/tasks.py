@@ -46,10 +46,11 @@ def update_feed_item():
                 'link': link,
                 'author': author,
                 'summary': summary,
-                'read': False,
-                'feed': feed
+                'read': False
             }
-            db["entries"].insert_one(entry)
+            has_entry = db["entries"].find_one({"link": link})
+            if not has_entry:
+                db["entries"].insert_one(entry)
     return True
 
 
