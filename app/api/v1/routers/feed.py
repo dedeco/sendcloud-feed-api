@@ -42,7 +42,7 @@ async def list_feeds():
     return feeds
 
 
-@feed_router.put("/{id}", response_description="Update a feed", response_model=FeedModel)
+@feed_router.put("/{id}", response_description="Update a feed and/force an update (entries)", response_model=FeedModel)
 async def update_feed(id: str, feed: UpdateFeedModel = Body(...)):
     feed = {k: v for k, v in feed.dict().items() if v is not None}
 
@@ -52,6 +52,8 @@ async def update_feed(id: str, feed: UpdateFeedModel = Body(...)):
             if (
                 updated_feed := await db["feeds"].find_one({"_id": id})
             ) is not None:
+                if updated_feed.get('last_updated'):
+                    celery_app.send_task("app.workers.entries.tasks.update_feed_item", args=[updated_feed.get("url")])
                 return updated_feed
 
     if (existing_feed := await db["feeds"].find_one({"_id": id})) is not None:

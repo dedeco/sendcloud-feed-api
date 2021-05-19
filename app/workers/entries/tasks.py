@@ -28,8 +28,11 @@ def update_feed(feed_id: str):
 
 
 @celery_app.task
-def update_feed_item():
-    feeds = db["feeds"].find()
+def update_feed_item(url: str = None):
+    query = {'updates_enabled': True}
+    if url:
+        query.update({'url': url})
+    feeds = db["feeds"].find(query)
     for feed in feeds:
         url = feed.get('url')
         r = requests.get(url)

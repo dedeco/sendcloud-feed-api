@@ -5,7 +5,7 @@ from pydantic import BaseModel, AnyUrl, HttpUrl
 
 
 class UpdateFeedModel(BaseModel):
-    url: AnyUrl
+    url: Optional[AnyUrl]
     title: Optional[str]
     link: Optional[HttpUrl]
     description: Optional[str]

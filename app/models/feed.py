@@ -9,10 +9,10 @@ from app.models.base import PyObjectId
 class FeedModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     url: AnyUrl = Field(...)
-    title: Optional[str] = Field(...)
-    link:  Optional[HttpUrl] = Field(...)
-    description: Optional[str] = Field(...)
-    updates_enabled: Optional[bool] = Field(...)
+    title: Optional[str]
+    link:  Optional[HttpUrl]
+    description: Optional[str]
+    updates_enabled: Optional[bool]
 
     class Config:
         allow_population_by_field_name = True
