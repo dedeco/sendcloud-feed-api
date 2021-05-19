@@ -25,9 +25,9 @@ def update_feeds():
 def update_feed(feed_id: str):
     feed = db["feeds"].find_one({"_id": feed_id})
     retries = 0
-    r = requests.get(feed.get('url'))
-    soup = BeautifulSoup(r.content, features='xml')
     try:
+        r = requests.get(feed.get('url'))
+        soup = BeautifulSoup(r.content, features='xml')
         channel = soup.find('channel')
         fetched = {
             'title': channel.find('title').text if channel.find('title') else None,
@@ -36,14 +36,14 @@ def update_feed(feed_id: str):
             'retries': 0
         }
         feed = feed | fetched
-    except AttributeError:
+    except requests.exceptions.RequestException:
         retries += feed.get('retries', 0) + 1
         feed = feed | {'retries': retries}
     db["feeds"].update_one({"_id": feed_id}, {"$set": feed})
     return True
 
 
-@celery_app.task()
+@celery_app.task(name='update_feed_item')
 def update_feed_item(url: str = None):
     query = {'updates_enabled': True}
     if url:
@@ -76,5 +76,5 @@ def update_feed_item(url: str = None):
 
 @celery_app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(5*60, update_feeds.s(), name='retry every 5 minutes')
+    sender.add_periodic_task(30, update_feeds.s(), name='retry every 30 seconds')
     sender.add_periodic_task(60, update_feed_item.s(), name='update every 60 seconds')

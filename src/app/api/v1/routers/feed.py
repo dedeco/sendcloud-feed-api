@@ -28,7 +28,7 @@ async def add_feed(feed: FeedModel = Body(...)):
             content=existing_feed
         )
     new_feed = await db["feeds"].insert_one(feed)
-    celery_app.send_task("app.workers.entries.tasks.update_feed", args=[new_feed.inserted_id])
+    celery_app.send_task("update_feed", args=[new_feed.inserted_id])
     created_feed = await db["feeds"].find_one({"_id": new_feed.inserted_id})
     return JSONResponse(
         status_code=HTTPStatus.CREATED,
@@ -49,10 +49,10 @@ async def update_feed(id: str, feed: UpdateFeedModel = Body(...)):
     if len(feed) >= 1:
         update_result = await db["feeds"].update_one({"_id": id}, {"$set": feed})
         if update_result.modified_count == 1:
-            celery_app.send_task("app.workers.entries.tasks.update_feed", args=[id])
+            celery_app.send_task("update_feed", args=[id])
             if (updated_feed := await db["feeds"].find_one({"_id": id})) is not None:
                 if updated_feed.get('last_updated'):
-                    celery_app.send_task("app.workers.entries.tasks.update_feed_item", args=[updated_feed.get("url")])
+                    celery_app.send_task("update_feed_item", args=[updated_feed.get("url")])
                 return updated_feed
 
     if (existing_feed := await db["feeds"].find_one({"_id": id})) is not None:

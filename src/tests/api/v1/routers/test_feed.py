@@ -72,4 +72,4 @@ class FeedTests(unittest.TestCase):
         )
         assert response.status_code == HTTPStatus.OK
         assert len(response.json()) > 0
-        #assert response.json() == response_test_data
+        assert response.json() == response_test_data
